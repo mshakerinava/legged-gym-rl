@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -30,8 +30,9 @@
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-class Go1RoughCfg( LeggedRobotCfg ):
-    class init_state( LeggedRobotCfg.init_state ):
+
+class Go1RoughCfg(LeggedRobotCfg):
+    class init_state(LeggedRobotCfg.init_state):
         pos = [0.0, 0.0, 0.38]  # x,y,z [m]
         default_joint_angles = {  # = target angles [rad] when action = 0.0
             "FL_hip_joint": 0.1,  # [rad]
@@ -48,7 +49,7 @@ class Go1RoughCfg( LeggedRobotCfg ):
             "RR_calf_joint": -1.5,  # [rad]
         }
 
-    class control( LeggedRobotCfg.control ):
+    class control(LeggedRobotCfg.control):
         # PD Drive parameters:
         control_type = "P"
         stiffness = {"joint": 20.0}  # [N*m/rad]
@@ -58,20 +59,22 @@ class Go1RoughCfg( LeggedRobotCfg ):
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
 
-    class asset( LeggedRobotCfg.asset ):
+    class asset(LeggedRobotCfg.asset):
         file = "{LEGGED_GYM_ROOT_DIR}/resources/robots/go1/urdf/go1.urdf"
         name = "go1"
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = ["base"]
-        self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
-        
-    class rewards( LeggedRobotCfg.rewards ):
+        self_collisions = 0  # 1 to disable, 0 to enable...bitwise filter
+
+    class rewards(LeggedRobotCfg.rewards):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.25
-        class scales( LeggedRobotCfg.rewards.scales ):
+
+        class scales(LeggedRobotCfg.rewards.scales):
             torques = -0.0002
             dof_pos_limits = -10.0
+
 
 class Go1FlatCfg(Go1RoughCfg):
     class terrain(Go1RoughCfg.terrain):
@@ -81,12 +84,21 @@ class Go1FlatCfg(Go1RoughCfg):
     class env(Go1RoughCfg.env):
         num_observations = 48
 
-class Go1RoughCfgPPO( LeggedRobotCfgPPO ):
-    class algorithm( LeggedRobotCfgPPO.algorithm ):
+
+class Go1FlatNoVelCfg(Go1FlatCfg):
+    class env(Go1FlatCfg.env):
+        num_observations = 42  # nice
+        observe_vel = False
+
+
+class Go1RoughCfgPPO(LeggedRobotCfgPPO):
+    class algorithm(LeggedRobotCfgPPO.algorithm):
         entropy_coef = 0.01
-    class runner( LeggedRobotCfgPPO.runner ):
-        run_name = ''
-        experiment_name = 'rough_go1'
+
+    class runner(LeggedRobotCfgPPO.runner):
+        run_name = ""
+        experiment_name = "rough_go1"
+
 
 class Go1FlatCfgPPO(LeggedRobotCfgPPO):
     class algorithm(LeggedRobotCfgPPO.algorithm):
@@ -97,4 +109,8 @@ class Go1FlatCfgPPO(LeggedRobotCfgPPO):
         experiment_name = "flat_go1"
         max_iterations = 500
 
-  
+
+class Go1FlatNoVelCfgPPO(Go1FlatCfgPPO):
+    class runner(Go1FlatCfgPPO.runner):
+        experiment_name = "flat_go1_novel"
+        max_iterations = 1500
