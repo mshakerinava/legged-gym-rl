@@ -83,6 +83,11 @@ class A1FlatCfg(A1RoughCfg):
         mesh_type = 'plane'
         measure_heights = False
 
+class A1FlatNoVelCfg(A1FlatCfg):
+    class env( A1RoughCfg.env ):
+        num_observations = 42 # nice
+        observe_vel = False
+
 class A1RoughCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
@@ -95,4 +100,8 @@ class A1FlatCfgPPO( A1RoughCfgPPO ):
         experiment_name = 'flat_a1'
         max_iterations = 500
 
-  
+class A1FlatNoVelCfgPPO( A1FlatCfgPPO ):
+    class runner( A1FlatCfgPPO.runner ):
+        experiment_name = 'flat_a1_novel'
+        max_iterations = 1500
+

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
-#
+# 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -28,25 +28,41 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from legged_gym.envs.a1.a1_config import A1RoughCfg, A1RoughCfgPPO, A1FlatNoVelCfgPPO, A1FlatNoVelCfg
-from .base.legged_robot import LeggedRobot
-from .anymal_c.anymal import Anymal
-from .anymal_c.mixed_terrains.anymal_c_rough_config import AnymalCRoughCfg, AnymalCRoughCfgPPO
-from .anymal_c.flat.anymal_c_flat_config import AnymalCFlatCfg, AnymalCFlatCfgPPO
-from .anymal_b.anymal_b_config import AnymalBRoughCfg, AnymalBRoughCfgPPO
-from .cassie.cassie import Cassie
-from .cassie.cassie_config import CassieRoughCfg, CassieRoughCfgPPO
-from .a1.a1_config import A1RoughCfg, A1RoughCfgPPO, A1FlatCfg, A1FlatCfgPPO
-from .go1.go1_config import Go1RoughCfg, Go1RoughCfgPPO, Go1FlatCfg, Go1FlatCfgPPO
+from legged_gym import LEGGED_GYM_ROOT_DIR
+import os
 
-from legged_gym.utils.task_registry import task_registry
+import isaacgym
+from legged_gym.envs import *
+from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Logger
 
-task_registry.register("anymal_c_rough", Anymal, AnymalCRoughCfg(), AnymalCRoughCfgPPO())
-task_registry.register("anymal_c_flat", Anymal, AnymalCFlatCfg(), AnymalCFlatCfgPPO())
-task_registry.register("anymal_b", Anymal, AnymalBRoughCfg(), AnymalBRoughCfgPPO())
-task_registry.register("a1_rough", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO())
-task_registry.register("a1_flat", LeggedRobot, A1FlatCfg(), A1FlatCfgPPO())
-task_registry.register("a1_flat_novel", LeggedRobot, A1FlatNoVelCfg(), A1FlatNoVelCfgPPO())
-task_registry.register("go1_rough", LeggedRobot, Go1RoughCfg(), Go1RoughCfgPPO())
-task_registry.register("go1_flat", LeggedRobot, Go1FlatCfg(), Go1FlatCfgPPO())
-task_registry.register("cassie", Cassie, CassieRoughCfg(), CassieRoughCfgPPO())
+import numpy as np
+import torch
+
+
+args = get_args(headless=True)
+args.headless
+env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
+# override some parameters for testing
+env_cfg.env.num_envs = min(env_cfg.env.num_envs, 4)
+env_cfg.terrain.num_rows = 1
+env_cfg.terrain.num_cols = 1
+env_cfg.terrain.curriculum = False
+env_cfg.noise.add_noise = False
+env_cfg.domain_rand.randomize_friction = False
+env_cfg.domain_rand.push_robots = False
+
+# prepare environment
+env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
+obs = env.get_observations()
+# load policy
+train_cfg.runner.resume = True
+ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+policy = ppo_runner.get_inference_policy(device=env.device)
+
+# export policy as a jit module (used to run it from C++)
+path = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'policies')
+fname = f"{args.task}-{args.load_run}-jitted.pt"
+export_policy_as_jit(ppo_runner.alg.actor_critic, path, fname)
+print(f'Exported policy as jit script to: {path}/{fname}')
+
+

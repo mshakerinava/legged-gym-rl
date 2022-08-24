@@ -5,6 +5,27 @@ It includes all components needed for sim-to-real transfer: actuator network, fr
 **Affiliation**: Robotic Systems Lab, ETH Zurich  
 **Contact**: rudinn@ethz.ch  
 
+### JIT-Compile a trained policy
+
+Use the JIT-compile script in the scripts folder like so:
+
+    python legged_gym/scripts/jit-compile-trained-policy.py --task=a1_flat --load_run=Aug24_13-35-08_
+
+And it'll output a policy in the `logs` directory, e.g. in this case:
+
+    legged_gym/logs/flat_a1/exported/policies/a1_flat-Aug24_13-35-08_-jitted.pt
+
+Now you can use this policy in your own script like so:
+
+    policy = torch.jit.load(POLICY_PATH).to("cpu").eval()
+    
+    # construct observation here from the real robot
+    # obs = ...
+
+    action = policy(obs)
+    action = action.detach().cpu().numpy()
+    # and now you can send this action to the robot - this should correspond to 12 joint angles
+
 ### Useful Links ###
 Project website: https://leggedrobotics.github.io/legged_gym/
 Paper: https://arxiv.org/abs/2109.11978
