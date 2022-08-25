@@ -48,9 +48,9 @@ def reflect(x):
     return torch.flip(x, [-1])
 
 
-class LinearInActor(nn.Module):
+class LinearIn(nn.Module):
     def __init__(self, *args, **kwargs):
-        super(LinearInActor, self).__init__()
+        super(LinearIn, self).__init__()
         self.lin = nn.Linear(*args, **kwargs)
 
     def forward(self, x):
@@ -73,15 +73,6 @@ class LinearOutActor(nn.Module):
 
     def forward(self, x):
         return 0.5 * (self.lin(x) + g_output(self.lin(reflect(x))))
-
-
-class LinearInCritic(nn.Module):
-    def __init__(self, *args, **kwargs):
-        super(LinearInCritic, self).__init__()
-        self.lin = nn.Linear(*args, **kwargs)
-
-    def forward(self, x):
-        return 0.5 * (self.lin(x) + reflect(self.lin(g_output(x))))
 
              
 class LinearOutCritic(nn.Module):
@@ -115,7 +106,7 @@ class ActorCritic(nn.Module):
 
         # Policy
         actor_layers = []
-        actor_layers.append(LinearInActor(mlp_input_dim_a, actor_hidden_dims[0]))
+        actor_layers.append(LinearIn(mlp_input_dim_a, actor_hidden_dims[0]))
         actor_layers.append(activation)
         for l in range(len(actor_hidden_dims)):
             if l == len(actor_hidden_dims) - 1:
@@ -127,7 +118,7 @@ class ActorCritic(nn.Module):
 
         # Value function
         critic_layers = []
-        critic_layers.append(LinearInCritic(mlp_input_dim_c, critic_hidden_dims[0]))
+        critic_layers.append(LinearIn(mlp_input_dim_c, critic_hidden_dims[0]))
         critic_layers.append(activation)
         for l in range(len(critic_hidden_dims)):
             if l == len(critic_hidden_dims) - 1:
