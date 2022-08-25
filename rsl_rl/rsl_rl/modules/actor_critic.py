@@ -37,11 +37,15 @@ from torch.nn.modules import rnn
 
 #--- mehran ---#
 def g_output(x):
-    return torch.cat((x[..., -9:-6], x[..., -12:-9], x[..., -3:], x[..., -6:-3]), dim=-1)
+    y = torch.cat((x[..., -9:-6], x[..., -12:-9], x[..., -3:], x[..., -6:-3]), dim=-1)
+    assert x.shape == y.shape
+    return y
 
 
 def g_input(x):
-    return torch.cat((-x[..., 0:1], x[..., 1:3], -x[..., 3:4], x[..., 4:6], g_output(x[..., -3 * 12: -2 * 12]), g_output(x[..., -2 * 12: -12]), g_output(x[..., -12:])), dim=-1)
+    y = torch.cat((x[..., 0:1], -x[..., 1:2], x[..., 2:3], x[..., 3:4], -x[..., 4:5], x[..., 5:6], g_output(x[..., -3 * 12: -2 * 12]), g_output(x[..., -2 * 12: -12]), g_output(x[..., -12:])), dim=-1)
+    assert x.shape == y.shape
+    return y
 
 
 def reflect(x):
