@@ -50,7 +50,7 @@ def reflect(x):
 
 class LinearInActor(nn.Module):
     def __init__(self, *args, **kwargs):
-        super(LinearInput, self).__init__()
+        super(LinearInActor, self).__init__()
         self.lin = nn.Linear(*args, **kwargs)
 
     def forward(self, x):
@@ -59,7 +59,7 @@ class LinearInActor(nn.Module):
 
 class LinearMid(nn.Module):
     def __init__(self, *args, **kwargs):
-        super(LinearInput, self).__init__()
+        super(LinearMid, self).__init__()
         self.lin = nn.Linear(*args, **kwargs)
 
     def forward(self, x):
@@ -68,7 +68,7 @@ class LinearMid(nn.Module):
 
 class LinearOutActor(nn.Module):
     def __init__(self, *args, **kwargs):
-        super(LinearInput, self).__init__()
+        super(LinearOutActor, self).__init__()
         self.lin = nn.Linear(*args, **kwargs)
 
     def forward(self, x):
@@ -77,7 +77,7 @@ class LinearOutActor(nn.Module):
 
 class LinearInCritic(nn.Module):
     def __init__(self, *args, **kwargs):
-        super(LinearInput, self).__init__()
+        super(LinearInCritic, self).__init__()
         self.lin = nn.Linear(*args, **kwargs)
 
     def forward(self, x):
@@ -86,7 +86,7 @@ class LinearInCritic(nn.Module):
              
 class LinearOutCritic(nn.Module):
     def __init__(self, *args, **kwargs):
-        super(LinearInput, self).__init__()
+        super(LinearOutCritic, self).__init__()
         self.lin = nn.Linear(*args, **kwargs)
 
     def forward(self, x):
