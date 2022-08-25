@@ -45,7 +45,7 @@ def g_input(x):
 
 
 def reflect(x):
-    return x[..., ::-1]
+    return torch.flip(x, [-1])
 
 
 class LinearInActor(nn.Module):
