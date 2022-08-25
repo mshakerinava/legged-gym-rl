@@ -41,7 +41,7 @@ def g_output(x):
 
 
 def g_input(x):
-    return torch.cat((-x[..., 0], x[..., 1:3], -x[..., 3], x[..., 4:6], g_output(x[..., -3 * 12: -2 * 12]), g_output(x[..., -2 * 12: -12]), g_output(x[..., -12:])), dim=-1)
+    return torch.cat((-x[..., 0:1], x[..., 1:3], -x[..., 3:4], x[..., 4:6], g_output(x[..., -3 * 12: -2 * 12]), g_output(x[..., -2 * 12: -12]), g_output(x[..., -12:])), dim=-1)
 
 
 def reflect(x):
