@@ -35,6 +35,65 @@ import torch.nn as nn
 from torch.distributions import Normal
 from torch.nn.modules import rnn
 
+#--- mehran ---#
+def g_output(x):
+    return torch.cat((x[..., -9:-6], x[..., -12:-9], x[..., -3:], x[..., -6:-3]), dim=-1)
+
+
+def g_input(x):
+    return torch.cat((-x[..., 0], x[..., 1:3], -x[..., 3], x[..., 4:6], g_output(x[..., -3 * 12: -2 * 12]), g_output(x[..., -2 * 12: -12]), g_output(x[..., -12:]), dim=-1)
+
+
+def reflect(x):
+    return x[..., ::-1]
+
+
+class LinearInActor(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super(LinearInput, self).__init__()
+        self.lin = nn.Linear(*args, **kwargs)
+
+    def forward(self, x):
+        return 0.5 * (self.lin(x) + reflect(self.lin(g_input(x))))
+
+
+class LinearMid(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super(LinearInput, self).__init__()
+        self.lin = nn.Linear(*args, **kwargs)
+
+    def forward(self, x):
+        return 0.5 * (self.lin(x) + reflect(self.lin(reflect(x))))
+
+
+class LinearOutActor(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super(LinearInput, self).__init__()
+        self.lin = nn.Linear(*args, **kwargs)
+
+    def forward(self, x):
+        return 0.5 * (self.lin(x) + g_output(self.lin(reflect(x))))
+
+
+class LinearInCritic(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super(LinearInput, self).__init__()
+        self.lin = nn.Linear(*args, **kwargs)
+
+    def forward(self, x):
+        return 0.5 * (self.lin(x) + reflect(self.lin(g_output(x))))
+
+             
+class LinearOutCritic(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super(LinearInput, self).__init__()
+        self.lin = nn.Linear(*args, **kwargs)
+
+    def forward(self, x):
+        return 0.5 * (self.lin(x) + self.lin(reflect(x)))
+#--- mehran ---#
+
+
 class ActorCritic(nn.Module):
     is_recurrent = False
     def __init__(self,  num_actor_obs,
@@ -56,25 +115,25 @@ class ActorCritic(nn.Module):
 
         # Policy
         actor_layers = []
-        actor_layers.append(nn.Linear(mlp_input_dim_a, actor_hidden_dims[0]))
+        actor_layers.append(LinearInActor(mlp_input_dim_a, actor_hidden_dims[0]))
         actor_layers.append(activation)
         for l in range(len(actor_hidden_dims)):
             if l == len(actor_hidden_dims) - 1:
-                actor_layers.append(nn.Linear(actor_hidden_dims[l], num_actions))
+                actor_layers.append(LinearOutActor(actor_hidden_dims[l], num_actions))
             else:
-                actor_layers.append(nn.Linear(actor_hidden_dims[l], actor_hidden_dims[l + 1]))
+                actor_layers.append(LinearMid(actor_hidden_dims[l], actor_hidden_dims[l + 1]))
                 actor_layers.append(activation)
         self.actor = nn.Sequential(*actor_layers)
 
         # Value function
         critic_layers = []
-        critic_layers.append(nn.Linear(mlp_input_dim_c, critic_hidden_dims[0]))
+        critic_layers.append(LinearInCritic(mlp_input_dim_c, critic_hidden_dims[0]))
         critic_layers.append(activation)
         for l in range(len(critic_hidden_dims)):
             if l == len(critic_hidden_dims) - 1:
-                critic_layers.append(nn.Linear(critic_hidden_dims[l], 1))
+                critic_layers.append(LinearOutCritic(critic_hidden_dims[l], 1))
             else:
-                critic_layers.append(nn.Linear(critic_hidden_dims[l], critic_hidden_dims[l + 1]))
+                critic_layers.append(LinearMid(critic_hidden_dims[l], critic_hidden_dims[l + 1]))
                 critic_layers.append(activation)
         self.critic = nn.Sequential(*critic_layers)
 
